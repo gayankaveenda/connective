@@ -1,0 +1,64 @@
+plugins {
+    id("org.springframework.boot") version "3.0.5"
+    id("io.spring.dependency-management") version "1.1.0"
+    id 'java'
+    id 'maven-publish'
+    id 'com.palantir.docker' version '0.34.0'
+    id 'com.palantir.docker-run' version '0.34.0'
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            group = 'com.interview'
+            artifactId = 'connective'
+            version = '1.0'
+            artifact bootJar
+        }
+    }
+
+    repositories {
+        mavenLocal()
+    }
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    compileOnly 'org.projectlombok:lombok'
+    runtimeOnly 'com.h2database:h2'
+    annotationProcessor 'org.projectlombok:lombok'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.2'
+}
+
+test {
+    useJUnitPlatform {
+        includeTags 'mandatory'
+        excludeTags 'ignore'
+    }
+}
+
+version = '1.0'
+
+
+docker {
+    name "${project.name}:${project.version}"
+    files "$buildDir/libs/${project.name}-${project.version}.jar"
+    buildArgs([JAR_FILE: "${project.name}-${project.version}.jar"])
+}
+
+dockerRun {
+    name "${project.name}"
+    image "${project.name}:${project.version}"
+    ports '9000:9000'
+    clean true
+    daemonize false
+}
